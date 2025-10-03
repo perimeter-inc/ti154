@@ -246,7 +246,8 @@ impl PurgeCnf {
 #[derive(Debug, Clone)]
 pub struct WSAsyncInd {
     pub src_address: Address,
-    pub dest_address: Address,
+    pub dest_addrmode: u8,
+    pub dest_address: ExtendedAddress,
     pub timestamp: u32,
     pub timestamp2: u16,
     pub src_pan_id: u16,
@@ -271,7 +272,8 @@ impl WSAsyncInd {
     pub fn try_decode(buffer: &[u8]) -> Result<Self, Error> {
         let mut cursor = Cursor::new(buffer);
         let src_address = Address::try_decode(&mut cursor)?;
-        let dest_address = Address::try_decode(&mut cursor)?;
+        let dest_addrmode = cursor.get_u8();
+        let dest_address = ExtendedAddress::try_decode(&mut cursor)?;
         let timestamp = cursor.get_u32_le();
         let timestamp2 = cursor.get_u16_le();
         let src_pan_id = cursor.get_u16_le();
@@ -294,13 +296,14 @@ impl WSAsyncInd {
             .read_exact(&mut data_payload)
             .map_err(|_| Error::NotEnoughBytes)?;
 
-        let mut ie_payload = vec![0x00; data_length as usize];
+        let mut ie_payload = vec![0x00; ie_length as usize];
         cursor
             .read_exact(&mut ie_payload)
             .map_err(|_| Error::NotEnoughBytes)?;
 
         Ok(WSAsyncInd {
             src_address,
+            dest_addrmode,
             dest_address,
             timestamp,
             timestamp2,
@@ -331,6 +334,7 @@ impl WSAsyncInd {
 
     pub fn encode_into(&self, buffer: &mut Vec<u8>) {
         self.src_address.encode_into(buffer);
+        buffer.put_u8(self.dest_addrmode);
         self.dest_address.encode_into(buffer);
         buffer.put_u32_le(self.timestamp);
         buffer.put_u16_le(self.timestamp2);

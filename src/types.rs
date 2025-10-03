@@ -298,6 +298,13 @@ impl Address {
     }
 }
 
+pub struct IeItem {
+    pub type_long: bool,
+    pub id: u8,
+    pub content_len: u16,
+    pub content: Vec<u8>,
+}
+
 bitflags! {
     #[derive(Debug, Clone)]
     pub struct TxOption: u8 {
@@ -554,6 +561,10 @@ pub enum FHPIBAttributeId {
     GTK2Hash = 0x2017,
     GTK3Hash = 0x2018,
     NeighborValidTime = 0x2019,
+    CsmaBaseBacoff = 0x201A,
+    NumNonSleepDevice = 0x201B,
+    NumSleepDevice = 0x201C,
+    NumTempTableNode = 0x201D,
 }
 
 impl FHPIBAttributeId {
