@@ -1478,10 +1478,12 @@ impl WSAsyncReq {
         self.channels.encode_into(buffer);
     }
 
+    // This frame's length is 0x1e, instead of 0x26 (as shown in the documentation). Check the link below for more information.
+    // https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1578237/launchxl-cc1352r1-wrong-length-for-mac_ws_async_req-command
     pub fn into_mt_frame(self) -> MTFrame {
         MTFrame {
             header: MTHeader {
-                length: 0x26,
+                length: 0x1e,
                 command: CommandCode {
                     is_extended: false,
                     cmd_type: CommandType::SREQ,
