@@ -531,6 +531,21 @@ pub enum MACPIBAttributeId {
     ChannelPage = 0xE7,
     PhyCurrentDescriptorId = 0xE8,
     FCSType = 0xE9,
+    DiagRxCrcPass = 0xEA,
+    DiagRxCrcFail = 0xEB,
+    DiagRxBC = 0xEC,
+    DiagTxBC = 0xED,
+    DiagRxUC = 0xEE,
+    DiagTxUC = 0xEF,
+    DiagTxUCRetry = 0xF0,
+    DiagTxUCFail = 0xF1,
+    DiagRxSecureFail = 0xF2,
+    DiagTxSecureFail = 0xF3,
+    RssiThreshold = 0xF4,
+    RangeExtender = 0xF5,
+    EnDataAckPending = 0xF6,
+    RfFreq = 0xF7,
+    PaType = 0xF8,
 }
 
 impl MACPIBAttributeId {
