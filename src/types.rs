@@ -266,7 +266,7 @@ impl ExtendedAddress {
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Address {
-    AddrNone(ExtendedAddress),
+    AddrNone,
     Addr16Bit(ShortAddress),
     Addr64Bit(ExtendedAddress),
 }
@@ -276,7 +276,10 @@ impl Address {
         let address_mode = AddressMode::try_decode(Read::by_ref(cursor))?;
 
         let address = match address_mode {
-            AddressMode::AddrNone => Address::AddrNone(ExtendedAddress::try_decode(cursor)?),
+            AddressMode::AddrNone => {
+                std::io::BufRead::consume(cursor, 8);
+                Address::AddrNone
+            },
             AddressMode::Addr16Bit => {
                 let address = Address::Addr16Bit(ShortAddress::try_decode(cursor)?);
                 std::io::BufRead::consume(cursor, 6);
@@ -290,9 +293,9 @@ impl Address {
 
     pub fn encode_into(&self, buffer: &mut Vec<u8>) {
         match self {
-            Address::AddrNone(address) => {
+            Address::AddrNone => {
                 buffer.put_u8(AddressMode::AddrNone as u8);
-                address.encode_into(buffer);
+                buffer.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
             }
             Address::Addr16Bit(address) => {
                 buffer.put_u8(AddressMode::Addr16Bit as u8);
