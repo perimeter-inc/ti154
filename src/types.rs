@@ -207,8 +207,11 @@ impl Status {
     }
 }
 
+// AddrNone value was added in order to handle AddressMode zeroed. Check the link below for more information.
+// https://e2e.ti.com/support/wireless-connectivity/sub-1-ghz-group/sub-1-ghz/f/sub-1-ghz-forum/1570804/simplelink-cc13xx-cc26xx-sdk-dstaddrmode-is-zeroed-in-mac_ws_async_ind-packet
 #[derive(Debug, FromPrimitive, PartialEq, Copy, Clone)]
 pub enum AddressMode {
+    AddrNone = 0x00,
     Addr16Bit = 0x02,
     Addr64Bit = 0x03,
 }
@@ -263,6 +266,7 @@ impl ExtendedAddress {
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Address {
+    AddrNone,
     Addr16Bit(ShortAddress),
     Addr64Bit(ExtendedAddress),
 }
@@ -272,11 +276,15 @@ impl Address {
         let address_mode = AddressMode::try_decode(Read::by_ref(cursor))?;
 
         let address = match address_mode {
+            AddressMode::AddrNone => {
+                std::io::BufRead::consume(cursor, 8);
+                Address::AddrNone
+            },
             AddressMode::Addr16Bit => {
                 let address = Address::Addr16Bit(ShortAddress::try_decode(cursor)?);
                 std::io::BufRead::consume(cursor, 6);
                 address
-            }
+            },
             AddressMode::Addr64Bit => Address::Addr64Bit(ExtendedAddress::try_decode(cursor)?),
         };
 
@@ -285,6 +293,10 @@ impl Address {
 
     pub fn encode_into(&self, buffer: &mut Vec<u8>) {
         match self {
+            Address::AddrNone => {
+                buffer.put_u8(AddressMode::AddrNone as u8);
+                buffer.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+            }
             Address::Addr16Bit(address) => {
                 buffer.put_u8(AddressMode::Addr16Bit as u8);
                 address.encode_into(buffer);
@@ -296,6 +308,15 @@ impl Address {
             }
         }
     }
+}
+
+// Struct based on the ApiMac_payloadIeItem_t retrieved from
+// the api_mac.h file in the SIMPLELINK-LOWPOWER-F2-SDK v8.30.01.01
+pub struct IeItem {
+    pub type_long: bool,
+    pub id: u8,
+    pub content_len: u16,
+    pub content: Vec<u8>,
 }
 
 bitflags! {
@@ -513,6 +534,21 @@ pub enum MACPIBAttributeId {
     ChannelPage = 0xE7,
     PhyCurrentDescriptorId = 0xE8,
     FCSType = 0xE9,
+    DiagRxCrcPass = 0xEA,
+    DiagRxCrcFail = 0xEB,
+    DiagRxBC = 0xEC,
+    DiagTxBC = 0xED,
+    DiagRxUC = 0xEE,
+    DiagTxUC = 0xEF,
+    DiagTxUCRetry = 0xF0,
+    DiagTxUCFail = 0xF1,
+    DiagRxSecureFail = 0xF2,
+    DiagTxSecureFail = 0xF3,
+    RssiThreshold = 0xF4,
+    RangeExtender = 0xF5,
+    EnDataAckPending = 0xF6,
+    RfFreq = 0xF7,
+    PaType = 0xF8,
 }
 
 impl MACPIBAttributeId {
@@ -554,6 +590,10 @@ pub enum FHPIBAttributeId {
     GTK2Hash = 0x2017,
     GTK3Hash = 0x2018,
     NeighborValidTime = 0x2019,
+    CsmaBaseBacoff = 0x201A,
+    NumNonSleepDevice = 0x201B,
+    NumSleepDevice = 0x201C,
+    NumTempTableNode = 0x201D,
 }
 
 impl FHPIBAttributeId {

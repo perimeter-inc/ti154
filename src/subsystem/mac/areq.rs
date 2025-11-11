@@ -294,7 +294,7 @@ impl WSAsyncInd {
             .read_exact(&mut data_payload)
             .map_err(|_| Error::NotEnoughBytes)?;
 
-        let mut ie_payload = vec![0x00; data_length as usize];
+        let mut ie_payload = vec![0x00; ie_length as usize];
         cursor
             .read_exact(&mut ie_payload)
             .map_err(|_| Error::NotEnoughBytes)?;
